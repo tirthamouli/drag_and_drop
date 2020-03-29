@@ -1,2 +1,2 @@
-# drag_and_drop
+# Drag and drop
 A drag and drop project manager
