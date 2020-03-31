@@ -104,7 +104,7 @@ var Project = (function () {
         Required
     ], Project.prototype, "title", void 0);
     __decorate([
-        MinLength(50),
+        MinLength(10),
         MaxLength(255),
         Required
     ], Project.prototype, "description", void 0);
@@ -125,6 +125,23 @@ function AutoBind(_, _2, desc) {
     };
     return adjustedDescriptor;
 }
+var ProjectList = (function () {
+    function ProjectList(host, template, type) {
+        this.type = type;
+        this.template = template;
+        this.host = host;
+        var importedNode = document.importNode(this.template.content, true);
+        this.section = importedNode.firstElementChild;
+        this.ul = this.section.querySelector('ul');
+        this.section.id = type + "-projects";
+        this.ul.id = type + "-projects-list";
+        this.section.querySelector('h2').textContent = type.toUpperCase() + " PROJECTS";
+    }
+    ProjectList.prototype.render = function () {
+        this.host.insertAdjacentElement('beforeend', this.section);
+    };
+    return ProjectList;
+}());
 var ProjectInput = (function () {
     function ProjectInput(host, template) {
         this.template = template;
@@ -169,9 +186,13 @@ var ProjectInput = (function () {
     return ProjectInput;
 }());
 (function () {
-    var projectInput = new ProjectInput(document.getElementById('app'), document.getElementById('project-input'));
+    var root = document.getElementById('app');
+    var projectInput = new ProjectInput(root, document.getElementById('project-input'));
+    var activeProjects = new ProjectList(root, document.getElementById('project-list'), 'active');
+    var finishedProjects = new ProjectList(root, document.getElementById('project-list'), 'finished');
     projectInput.render();
     projectInput.addListeners();
-    console.log(validator);
+    activeProjects.render();
+    finishedProjects.render();
 })();
 //# sourceMappingURL=index.js.map

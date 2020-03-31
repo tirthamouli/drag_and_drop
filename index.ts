@@ -215,7 +215,7 @@ class Project {
   /**
    * Description of a project
    */
-  @MinLength(50)
+  @MinLength(10)
   @MaxLength(255)
   @Required
   description = ''
@@ -242,6 +242,7 @@ class Project {
   }
 }
 
+
 /**
  * Automatically binds any method to the current object with which it is called
  * @param target
@@ -261,6 +262,54 @@ function AutoBind(_: any, _2: string, desc: TypedPropertyDescriptor<any>) {
 
   // Step 3: Return the adjusted descriptor
   return adjustedDescriptor;
+}
+
+class ProjectList {
+  /**
+   * The main template for the section
+   */
+  private template: HTMLTemplateElement
+
+  /**
+   * Position where we are going to render
+   */
+  private host: HTMLDivElement
+
+  /**
+   * The main section where we will display the list
+   */
+  private section: HTMLElement
+
+  /**
+   * The main ul to which we are going to append the list item
+   */
+  private ul: HTMLUListElement
+
+  /**
+   * Constructor
+   */
+  constructor(host: HTMLDivElement, template: HTMLTemplateElement, private type: 'active' | 'finished') {
+    // Step 1: Default
+    this.template = template;
+    this.host = host;
+
+    // Step 2: Derrived
+    const importedNode = document.importNode(this.template.content, true);
+    this.section = importedNode.firstElementChild as HTMLElement;
+    this.ul = this.section.querySelector('ul') as HTMLUListElement;
+
+    // Step 3: Adding content
+    this.section.id = `${type}-projects`;
+    this.ul.id = `${type}-projects-list`;
+    (this.section.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
+  }
+
+  /**
+   * Renders the elements in the page
+   */
+  render() {
+    this.host.insertAdjacentElement('beforeend', this.section);
+  }
 }
 
 /**
@@ -373,15 +422,30 @@ class ProjectInput {
 
 // Initializing
 (() => {
-  // Step 1: Create a new project instance
+  // Step 1: Get the root
+  const root = document.getElementById('app') as HTMLDivElement;
+
+  // Step 1: DOM initializers
   const projectInput = new ProjectInput(
-    document.getElementById('app') as HTMLDivElement,
+    root,
     document.getElementById('project-input') as HTMLTemplateElement,
+  );
+  const activeProjects = new ProjectList(
+    root,
+    document.getElementById('project-list') as HTMLTemplateElement,
+    'active',
+  );
+  const finishedProjects = new ProjectList(
+    root,
+    document.getElementById('project-list') as HTMLTemplateElement,
+    'finished',
   );
 
 
   // Step 2: Instantiate it and add the event listeners
   projectInput.render();
   projectInput.addListeners();
-  console.log(validator);
+
+  activeProjects.render();
+  finishedProjects.render();
 })();
