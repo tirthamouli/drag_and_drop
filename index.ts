@@ -286,6 +286,59 @@ class ProjectList {
   private ul: HTMLUListElement
 
   /**
+   * List of the projects
+   */
+  private list: Project[] = []
+
+  /**
+   * Get the project list
+   */
+  get projects() {
+    return this.list;
+  }
+
+  /**
+   * Set the project list and change dom accordingly
+   */
+  set projects(value: Project[]) {
+    // Step 1: Get the child li
+    const liList = this.ul.children;
+
+    // Step 2: Remove elements which are not needed
+    const keepTitles: {[property: string]: number} = {};
+    const keptTitles: {[property: string]: number} = {};
+    let deleted = 0;
+    value.forEach((item, index) => {
+      keepTitles[item.title] = index;
+    });
+    this.list.forEach((item, index) => {
+      if (!keepTitles[item.title]) {
+        this.ul.removeChild(liList[index]);
+        deleted += 1;
+        return;
+      }
+      keptTitles[item.title] = index - deleted;
+    });
+
+
+    // Step 3: Add or move items at the correct index
+    value.forEach((item, index) => {
+      if (keptTitles[item.title] === undefined) {
+        // Add the item
+        const li = document.createElement('li');
+        li.textContent = item.title;
+        this.ul.insertBefore(li, this.ul.children[index]);
+      } else if (keptTitles[item.title] !== index) {
+        // Move the item here
+        this.ul.insertBefore(this.ul.children[keptTitles[item.title]], this.ul.children[index]);
+      }
+    });
+
+    // Step 4: Update the list
+    this.list = value;
+  }
+
+  /**
    * Constructor
    */
   constructor(host: HTMLDivElement, template: HTMLTemplateElement, private type: 'active' | 'finished') {
@@ -347,11 +400,20 @@ class ProjectInput {
   private people: HTMLInputElement
 
   /**
+   * The active projects list
+   */
+  private projectList: ProjectList
+
+  /**
    * Constructor
    * @param host
    * @param template
    */
-  constructor(host: HTMLDivElement, template: HTMLTemplateElement) {
+  constructor(
+    host: HTMLDivElement,
+    template: HTMLTemplateElement,
+    projectList: ProjectList,
+  ) {
     // Step 1: Defaults
     this.template = template;
     this.host = host;
@@ -362,12 +424,13 @@ class ProjectInput {
     this.title = this.form.querySelector('#title') as HTMLInputElement;
     this.description = this.form.querySelector('#description') as HTMLTextAreaElement;
     this.people = this.form.querySelector('#people') as HTMLInputElement;
+    this.projectList = projectList;
   }
 
   /**
    * Validate user inputs
    */
-  private getUserInput():[string, string, number] {
+  private getUserInput() {
     // Step 1: Get all the values
     const title = this.title.value.trim();
     const description = this.description.value.trim();
@@ -381,11 +444,19 @@ class ProjectInput {
 
     // Step 4: Check if valid
     if (check.valid) {
-      return [project.title, project.description, project.people];
+      return project;
     }
 
-    console.log(check.details);
     throw new Error('Invalid Input');
+  }
+
+  /**
+   * Clears the input
+   */
+  private clearInputs() {
+    this.title.value = '';
+    this.description.value = '';
+    this.people.value = '';
   }
 
   /**
@@ -397,9 +468,14 @@ class ProjectInput {
     event.preventDefault();
 
     try {
-      const [title, description, people] = this.getUserInput();
-      console.log(title, description, people);
+      // Step 1: Add new project
+      const project = this.getUserInput();
+      this.projectList.projects = [project, ...this.projectList.projects];
+
+      // Step 2: Remove the values
+      this.clearInputs();
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.log(error);
     }
   }
@@ -426,14 +502,15 @@ class ProjectInput {
   const root = document.getElementById('app') as HTMLDivElement;
 
   // Step 1: DOM initializers
-  const projectInput = new ProjectInput(
-    root,
-    document.getElementById('project-input') as HTMLTemplateElement,
-  );
   const activeProjects = new ProjectList(
     root,
     document.getElementById('project-list') as HTMLTemplateElement,
     'active',
+  );
+  const projectInput = new ProjectInput(
+    root,
+    document.getElementById('project-input') as HTMLTemplateElement,
+    activeProjects,
   );
   const finishedProjects = new ProjectList(
     root,
