@@ -33,15 +33,20 @@ function addValidator(constructorName, propertyName, validatorName, validatorFun
 function validate(obj) {
     var className = obj.constructor.name;
     if (!validator[className]) {
-        return { valid: true, invalidValidators: [] };
+        return { valid: true, details: [] };
     }
-    var res = { valid: true, invalidValidators: [] };
+    var res = { valid: true, details: [] };
     Object.keys(obj).forEach(function (key) {
+        var details = {
+            prop: key,
+            invalid: [],
+        };
+        res.details.push(details);
         if (validator[className][key]) {
             validator[className][key].forEach(function (val) {
                 if (!val.validator(obj[key])) {
                     res.valid = false;
-                    res.invalidValidators.push(val.name);
+                    details.invalid.push(val.name);
                 }
             });
         }
@@ -64,6 +69,26 @@ function PositiveNumber(target, propertyName) {
         return false;
     });
 }
+function MinLength(min) {
+    return function (target, propertyName) {
+        addValidator(target.constructor.name, propertyName, 'min length', function (value) { return value.length >= min; });
+    };
+}
+function MaxLength(max) {
+    return function (target, propertyName) {
+        addValidator(target.constructor.name, propertyName, 'max length', function (value) { return value.length <= max; });
+    };
+}
+function Min(min) {
+    return function (target, propertyName) {
+        addValidator(target.constructor.name, propertyName, 'min', function (value) { return value >= min; });
+    };
+}
+function Max(max) {
+    return function (target, propertyName) {
+        addValidator(target.constructor.name, propertyName, 'max', function (value) { return value <= max; });
+    };
+}
 var Project = (function () {
     function Project(title, description, people) {
         this.title = '';
@@ -74,14 +99,20 @@ var Project = (function () {
         this.people = people;
     }
     __decorate([
+        MinLength(5),
+        MaxLength(100),
         Required
     ], Project.prototype, "title", void 0);
     __decorate([
+        MinLength(50),
+        MaxLength(255),
         Required
     ], Project.prototype, "description", void 0);
     __decorate([
-        Required,
-        PositiveNumber
+        Max(10),
+        Min(2),
+        PositiveNumber,
+        Required
     ], Project.prototype, "people", void 0);
     return Project;
 }());
@@ -113,7 +144,7 @@ var ProjectInput = (function () {
         if (check.valid) {
             return [project.title, project.description, project.people];
         }
-        console.log(check.invalidValidators);
+        console.log(check.details);
         throw new Error('Invalid Input');
     };
     ProjectInput.prototype.submitForm = function (event) {
@@ -141,5 +172,6 @@ var ProjectInput = (function () {
     var projectInput = new ProjectInput(document.getElementById('app'), document.getElementById('project-input'));
     projectInput.render();
     projectInput.addListeners();
+    console.log(validator);
 })();
 //# sourceMappingURL=index.js.map

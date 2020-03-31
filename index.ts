@@ -79,7 +79,10 @@ function addValidator(
  */
 type ValidateFuncResType = {
   valid : boolean,
-  invalidValidators: string[]
+  details: {
+    prop: string,
+    invalid: string[]
+  }[]
 }
 
 /**
@@ -96,19 +99,32 @@ function validate(
 
   // Step 2: Check if this class needs to be validated
   if (!validator[className]) {
-    return { valid: true, invalidValidators: [] };
+    return { valid: true, details: [] };
   }
 
   // Step 3: Default res
-  const res: ValidateFuncResType = { valid: true, invalidValidators: [] };
+  const res: ValidateFuncResType = { valid: true, details: [] };
 
   // Step 3: Loop throgh all the properties
   Object.keys(obj).forEach((key) => {
+    // Step 3.1: Add a default for the key
+    const details: {
+      prop: string,
+      invalid: string[]
+    } = {
+      prop: key,
+      invalid: [],
+    };
+
+    res.details.push(details);
+
+    // Step 3.2: Check if there is any validatator for the key
     if (validator[className][key]) {
+      // Step 3.3: Loop through all the validators and mark the invalid validators
       validator[className][key].forEach((val) => {
         if (!val.validator(obj[key])) {
           res.valid = false;
-          res.invalidValidators.push(val.name);
+          details.invalid.push(val.name);
         }
       });
     }
@@ -124,7 +140,7 @@ function validate(
  * @param target
  * @param propertyName
  */
-function Required(target: {constructor: {name:string}}, propertyName: string) {
+function Required(target: object, propertyName: string) {
   addValidator(target.constructor.name, propertyName, 'required', (value) => {
     if (value) {
       return true;
@@ -138,7 +154,7 @@ function Required(target: {constructor: {name:string}}, propertyName: string) {
  * @param target
  * @param propertyName
  */
-function PositiveNumber(target: {constructor: {name:string}}, propertyName: string) {
+function PositiveNumber(target: object, propertyName: string) {
   addValidator(target.constructor.name, propertyName, 'positive number', (value) => {
     if (typeof value === 'number' && value > 0) {
       return true;
@@ -147,24 +163,70 @@ function PositiveNumber(target: {constructor: {name:string}}, propertyName: stri
   });
 }
 
+/**
+ * Checks weather the min length criterion is met
+ * @param min
+ */
+function MinLength(min: number) {
+  return (target: object, propertyName: string) => {
+    addValidator(target.constructor.name, propertyName, 'min length', (value: string) => value.length >= min);
+  };
+}
+
+/**
+ * Checks weather the max length criterion is met
+ * @param min
+ */
+function MaxLength(max: number) {
+  return (target: object, propertyName: string) => {
+    addValidator(target.constructor.name, propertyName, 'max length', (value: string) => value.length <= max);
+  };
+}
+
+/**
+ * Checks weather the max length criterion is met
+ * @param min
+ */
+function Min(min: number) {
+  return (target: object, propertyName: string) => {
+    addValidator(target.constructor.name, propertyName, 'min', (value: number) => value >= min);
+  };
+}
+
+/**
+ * Checks weather the max length criterion is met
+ * @param min
+ */
+function Max(max: number) {
+  return (target: object, propertyName: string) => {
+    addValidator(target.constructor.name, propertyName, 'max', (value: number) => value <= max);
+  };
+}
+
 class Project {
   /**
    * Title of a project
    */
+  @MinLength(5)
+  @MaxLength(100)
   @Required
   title = ''
 
   /**
    * Description of a project
    */
+  @MinLength(50)
+  @MaxLength(255)
   @Required
   description = ''
 
   /**
    * Number of people in the project
    */
-  @Required
+  @Max(10)
+  @Min(2)
   @PositiveNumber
+  @Required
   people = 0
 
   /**
@@ -273,7 +335,7 @@ class ProjectInput {
       return [project.title, project.description, project.people];
     }
 
-    console.log(check.invalidValidators);
+    console.log(check.details);
     throw new Error('Invalid Input');
   }
 
@@ -317,7 +379,9 @@ class ProjectInput {
     document.getElementById('project-input') as HTMLTemplateElement,
   );
 
+
   // Step 2: Instantiate it and add the event listeners
   projectInput.render();
   projectInput.addListeners();
+  console.log(validator);
 })();
