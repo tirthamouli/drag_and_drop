@@ -203,6 +203,9 @@ function Max(max: number) {
   };
 }
 
+/**
+ * Stores a project
+ */
 class Project {
   /**
    * Title of a project
@@ -264,22 +267,44 @@ function AutoBind(_: any, _2: string, desc: TypedPropertyDescriptor<any>) {
   return adjustedDescriptor;
 }
 
-class ProjectList {
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
   /**
    * The main template for the section
    */
-  private template: HTMLTemplateElement
+  protected template: HTMLTemplateElement
 
   /**
    * Position where we are going to render
    */
-  private host: HTMLDivElement
+  protected host: T
 
   /**
-   * The main section where we will display the list
+   * The element which we are going to add
    */
-  private section: HTMLElement
+  protected element: U
 
+  /**
+   * Constructor for the base class
+   */
+  protected constructor(host: T, template: HTMLTemplateElement) {
+    // Step 1: Default
+    this.template = template;
+    this.host = host;
+
+    // Step 2: Derrived
+    const importedNode = document.importNode(this.template.content, true);
+    this.element = importedNode.firstElementChild as U;
+  }
+
+  /**
+   * Renders the elements in the page
+   */
+  render() {
+    this.host.insertAdjacentElement('beforeend', this.element);
+  }
+}
+
+class ProjectList extends Component<HTMLDivElement, HTMLUListElement> {
   /**
    * The main ul to which we are going to append the list item
    */
@@ -289,6 +314,22 @@ class ProjectList {
    * List of the projects
    */
   private list: Project[] = []
+
+  /**
+   * Constructor
+   */
+  constructor(host: HTMLDivElement, template: HTMLTemplateElement, private type: 'active' | 'finished') {
+    // Step 1: Default
+    super(host, template);
+
+    // Step 2: Derrived
+    this.ul = this.element.querySelector('ul') as HTMLUListElement;
+
+    // Step 3: Adding content
+    this.element.id = `${type}-projects`;
+    this.ul.id = `${type}-projects-list`;
+    (this.element.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
+  }
 
   /**
    * Get the project list
@@ -337,53 +378,12 @@ class ProjectList {
     // Step 4: Update the list
     this.list = value;
   }
-
-  /**
-   * Constructor
-   */
-  constructor(host: HTMLDivElement, template: HTMLTemplateElement, private type: 'active' | 'finished') {
-    // Step 1: Default
-    this.template = template;
-    this.host = host;
-
-    // Step 2: Derrived
-    const importedNode = document.importNode(this.template.content, true);
-    this.section = importedNode.firstElementChild as HTMLElement;
-    this.ul = this.section.querySelector('ul') as HTMLUListElement;
-
-    // Step 3: Adding content
-    this.section.id = `${type}-projects`;
-    this.ul.id = `${type}-projects-list`;
-    (this.section.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
-  }
-
-  /**
-   * Renders the elements in the page
-   */
-  render() {
-    this.host.insertAdjacentElement('beforeend', this.section);
-  }
 }
 
 /**
  * Project input class
  */
-class ProjectInput {
-  /**
-   * The main template for the form
-   */
-  private template: HTMLTemplateElement
-
-  /**
-   * Position where we are going to render
-   */
-  private host: HTMLDivElement
-
-  /**
-   * The main form
-   */
-  private form: HTMLFormElement
-
+class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
   /**
    * The title input
    */
@@ -415,15 +415,12 @@ class ProjectInput {
     projectList: ProjectList,
   ) {
     // Step 1: Defaults
-    this.template = template;
-    this.host = host;
+    super(host, template);
 
     // Step 2: Derrived
-    const importedNode = document.importNode(this.template.content, true);
-    this.form = importedNode.firstElementChild as HTMLFormElement;
-    this.title = this.form.querySelector('#title') as HTMLInputElement;
-    this.description = this.form.querySelector('#description') as HTMLTextAreaElement;
-    this.people = this.form.querySelector('#people') as HTMLInputElement;
+    this.title = this.element.querySelector('#title') as HTMLInputElement;
+    this.description = this.element.querySelector('#description') as HTMLTextAreaElement;
+    this.people = this.element.querySelector('#people') as HTMLInputElement;
     this.projectList = projectList;
   }
 
@@ -484,14 +481,7 @@ class ProjectInput {
    * Adds all the event listeners
    */
   addListeners() {
-    this.form.addEventListener('submit', this.submitForm);
-  }
-
-  /**
-   * Renders the elements in the page
-   */
-  render() {
-    this.host.insertAdjacentElement('afterbegin', this.form);
+    this.element.addEventListener('submit', this.submitForm);
   }
 }
 

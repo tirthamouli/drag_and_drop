@@ -1,4 +1,17 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -132,18 +145,29 @@ function AutoBind(_, _2, desc) {
     };
     return adjustedDescriptor;
 }
-var ProjectList = (function () {
-    function ProjectList(host, template, type) {
-        this.type = type;
-        this.list = [];
+var Component = (function () {
+    function Component(host, template) {
         this.template = template;
         this.host = host;
         var importedNode = document.importNode(this.template.content, true);
-        this.section = importedNode.firstElementChild;
-        this.ul = this.section.querySelector('ul');
-        this.section.id = type + "-projects";
-        this.ul.id = type + "-projects-list";
-        this.section.querySelector('h2').textContent = type.toUpperCase() + " PROJECTS";
+        this.element = importedNode.firstElementChild;
+    }
+    Component.prototype.render = function () {
+        this.host.insertAdjacentElement('beforeend', this.element);
+    };
+    return Component;
+}());
+var ProjectList = (function (_super) {
+    __extends(ProjectList, _super);
+    function ProjectList(host, template, type) {
+        var _this = _super.call(this, host, template) || this;
+        _this.type = type;
+        _this.list = [];
+        _this.ul = _this.element.querySelector('ul');
+        _this.element.id = type + "-projects";
+        _this.ul.id = type + "-projects-list";
+        _this.element.querySelector('h2').textContent = type.toUpperCase() + " PROJECTS";
+        return _this;
     }
     Object.defineProperty(ProjectList.prototype, "projects", {
         get: function () {
@@ -181,21 +205,17 @@ var ProjectList = (function () {
         enumerable: true,
         configurable: true
     });
-    ProjectList.prototype.render = function () {
-        this.host.insertAdjacentElement('beforeend', this.section);
-    };
     return ProjectList;
-}());
-var ProjectInput = (function () {
+}(Component));
+var ProjectInput = (function (_super) {
+    __extends(ProjectInput, _super);
     function ProjectInput(host, template, projectList) {
-        this.template = template;
-        this.host = host;
-        var importedNode = document.importNode(this.template.content, true);
-        this.form = importedNode.firstElementChild;
-        this.title = this.form.querySelector('#title');
-        this.description = this.form.querySelector('#description');
-        this.people = this.form.querySelector('#people');
-        this.projectList = projectList;
+        var _this = _super.call(this, host, template) || this;
+        _this.title = _this.element.querySelector('#title');
+        _this.description = _this.element.querySelector('#description');
+        _this.people = _this.element.querySelector('#people');
+        _this.projectList = projectList;
+        return _this;
     }
     ProjectInput.prototype.getUserInput = function () {
         var title = this.title.value.trim();
@@ -225,16 +245,13 @@ var ProjectInput = (function () {
         }
     };
     ProjectInput.prototype.addListeners = function () {
-        this.form.addEventListener('submit', this.submitForm);
-    };
-    ProjectInput.prototype.render = function () {
-        this.host.insertAdjacentElement('afterbegin', this.form);
+        this.element.addEventListener('submit', this.submitForm);
     };
     __decorate([
         AutoBind
     ], ProjectInput.prototype, "submitForm", null);
     return ProjectInput;
-}());
+}(Component));
 (function () {
     var root = document.getElementById('app');
     var activeProjects = new ProjectList(root, document.getElementById('project-list'), 'active');
