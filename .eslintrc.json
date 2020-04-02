@@ -21,6 +21,12 @@
         "linebreak-style": [
             "error",
             "windows"
+        ],
+        "no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "_"
+            }
         ]
     }
 }

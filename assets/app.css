@@ -9,6 +9,10 @@
   body {
     margin: 0;
   }
+
+  ul {
+    transition: all 0.2s ease-in-out;
+  }
   
   label,
   input,
@@ -91,6 +95,7 @@
     box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.26);
     padding: 1rem;
     margin: 1rem;
+    background-color: white;
   }
   
   .projects li h2 {

@@ -1,4 +1,62 @@
 /* eslint-disable max-classes-per-file */
+class Emitter {
+  /**
+   * Stores all the events
+   */
+  private events: {
+    [event: string]: Function[]
+  } = {}
+
+  /**
+   * Reacting to an event
+   * @param {String} event
+   * @param {Function} cb
+   */
+  on(event: string, cb: Function) {
+    // Step 1: Check if event already has already been added
+    if (this.events[event]) {
+      // Step ii: Insert callback at the end of the array
+      this.events[event].push(cb);
+    } else {
+      // Step i: Create a new array with the callback
+      this.events[event] = [cb];
+    }
+
+    // Step 3: Return the current added index
+    return this.events[event].length - 1;
+  }
+
+  /**
+   * Call all the callbacks that were given
+   * @param event
+   */
+  emit(event: string, ...args: any[]) {
+    // Step 1: Check if event exists
+    if (!this.events[event]) {
+      return false;
+    }
+
+
+    // Step 2: Get the array and loop throug all the call backs
+    this.events[event].forEach((curEvent) => curEvent(...args));
+
+    // Step 3: Return the default
+    return true;
+  }
+}
+
+/**
+ * Drag and drop interfaces
+ */
+interface Draggable {
+  dragStartHandler(event: DragEvent): void
+}
+
+interface DragTarget {
+  dragOverHandler(event: DragEvent): void
+  dropHandler(event: DragEvent): void
+  dragLeaveHandler(event: DragEvent): void
+}
 
 /**
  * Interface for a validator config
@@ -299,12 +357,78 @@ abstract class Component<T extends HTMLElement, U extends HTMLElement> {
   /**
    * Renders the elements in the page
    */
-  render() {
-    this.host.insertAdjacentElement('beforeend', this.element);
+  render(before?: U) {
+    if (before) {
+      this.host.insertBefore(this.element, before);
+    } else {
+      this.host.insertAdjacentElement('beforeend', this.element);
+    }
   }
 }
 
-class ProjectList extends Component<HTMLDivElement, HTMLUListElement> {
+/**
+ * A list item in the project
+ */
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> implements Draggable {
+  /**
+   * The details of the project that it is going to display
+   */
+  private project: Project
+
+  get person() {
+    if (this.project.people === 1) {
+      return '1 person assigned';
+    }
+    return `${this.project.people} people assigned`;
+  }
+
+  /**
+   * Sets up the values
+   * @param host
+   * @param template
+   * @param project
+   */
+  constructor(host: HTMLUListElement, template: HTMLTemplateElement, project: Project) {
+    // Step 1: Default
+    super(host, template);
+    this.project = project;
+
+    // Step 2: Setting the values
+    (this.element.querySelector('h2')!).textContent = this.project.title;
+    (this.element.querySelector('h3')!).textContent = this.person;
+    (this.element.querySelector('p')!).textContent = this.project.description;
+
+    // Step 3: Add event listeners
+    this.addListeners();
+  }
+
+  /**
+   * Start drag
+   * @param event
+   */
+  @AutoBind
+  dragStartHandler(event: DragEvent) {
+    // Step 1: Set the title
+    event.dataTransfer!.setData('text/plain', this.project.title);
+
+    // eslint-disable-next-line no-param-reassign
+    event.dataTransfer!.effectAllowed = 'move';
+  }
+
+
+  /**
+   * Add event listeners
+   */
+  private addListeners() {
+    this.element.addEventListener('dragstart', this.dragStartHandler);
+    // this.element.addEventListener('dragend', this.dragEndHandler);
+  }
+}
+
+/**
+ * The list of the projects
+ */
+class ProjectList extends Component<HTMLDivElement, HTMLUListElement> implements DragTarget {
   /**
    * The main ul to which we are going to append the list item
    */
@@ -316,20 +440,9 @@ class ProjectList extends Component<HTMLDivElement, HTMLUListElement> {
   private list: Project[] = []
 
   /**
-   * Constructor
+   * The emitter used for transfer
    */
-  constructor(host: HTMLDivElement, template: HTMLTemplateElement, private type: 'active' | 'finished') {
-    // Step 1: Default
-    super(host, template);
-
-    // Step 2: Derrived
-    this.ul = this.element.querySelector('ul') as HTMLUListElement;
-
-    // Step 3: Adding content
-    this.element.id = `${type}-projects`;
-    this.ul.id = `${type}-projects-list`;
-    (this.element.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
-  }
+  private transferEmitter: Emitter
 
   /**
    * Get the project list
@@ -342,41 +455,152 @@ class ProjectList extends Component<HTMLDivElement, HTMLUListElement> {
    * Set the project list and change dom accordingly
    */
   set projects(value: Project[]) {
-    // Step 1: Get the child li
-    const liList = this.ul.children;
-
-    // Step 2: Remove elements which are not needed
+    // Step 1: Remove elements which are not needed
     const keepTitles: {[property: string]: number} = {};
     const keptTitles: {[property: string]: number} = {};
     let deleted = 0;
+
     value.forEach((item, index) => {
       keepTitles[item.title] = index;
     });
     this.list.forEach((item, index) => {
       if (!keepTitles[item.title]) {
-        this.ul.removeChild(liList[index]);
+        this.ul.removeChild(this.ul.children[index - deleted]);
         deleted += 1;
         return;
       }
       keptTitles[item.title] = index - deleted;
     });
 
-
-    // Step 3: Add or move items at the correct index
+    // Step 2: Add or move items at the correct index
     value.forEach((item, index) => {
       if (keptTitles[item.title] === undefined) {
         // Add the item
-        const li = document.createElement('li');
-        li.textContent = item.title;
-        this.ul.insertBefore(li, this.ul.children[index]);
+        const li = new ProjectItem(
+          this.ul,
+          document.getElementById('single-project') as HTMLTemplateElement,
+          item,
+        );
+        li.render(this.ul.children[index] as HTMLLIElement);
       } else if (keptTitles[item.title] !== index) {
         // Move the item here
         this.ul.insertBefore(this.ul.children[keptTitles[item.title]], this.ul.children[index]);
       }
     });
 
-    // Step 4: Update the list
+    // Step 3: Update the list
     this.list = value;
+  }
+
+  /**
+   * Constructor
+   */
+  constructor(host: HTMLDivElement, template: HTMLTemplateElement, transferEmitter: Emitter, private type: 'active' | 'finished') {
+    // Step 1: Default
+    super(host, template);
+    this.transferEmitter = transferEmitter;
+
+    // Step 2: Derrived
+    this.ul = this.element.querySelector('ul') as HTMLUListElement;
+
+    // Step 3: Adding content
+    this.element.id = `${type}-projects`;
+    this.ul.id = `${type}-projects-list`;
+    (this.element.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
+  }
+
+  /**
+   * What happens when dragged over
+   * @param event
+   */
+  @AutoBind
+  dragOverHandler(event: DragEvent) {
+    if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+      event.preventDefault();
+      this.ul.classList.add('droppable');
+    }
+  }
+
+  /**
+   * What happens when dropped
+   * @param event
+   */
+  @AutoBind
+  dropHandler(event: DragEvent) {
+    try {
+      // Step 1: Get the data title
+      const title = event.dataTransfer!.getData('text/plain') as string;
+
+      // Step 2: Check if title is already present
+      if (this.projects.find((project) => project.title === title)) {
+        // No need to move
+        return;
+      }
+
+      // Step 3: Get the other type
+      let otherType = 'finished';
+      if (this.type === 'finished') {
+        otherType = 'active';
+      }
+
+      // Step 4: Take project from other type
+      this.transferEmitter.emit(`${otherType}.taken`, title);
+    } catch (_error) {
+      // eslint-disable-next-line no-alert
+      console.log(_error);
+      alert('Something went wrong');
+    }
+  }
+
+  /**
+   * What happens when drag left
+   * @param event
+   */
+  @AutoBind
+  dragLeaveHandler(_event: DragEvent) {
+    this.ul.classList.remove('droppable');
+  }
+
+  /**
+   * When something is dropped
+   * @param project
+   */
+  @AutoBind
+  droppedEventHandler(project: Project) {
+    this.projects = [project, ...this.projects];
+  }
+
+  /**
+   * Remove the project from project list
+   * @param projectTitle
+   */
+  @AutoBind
+  takenEventHandler(projectTitle: string) {
+    // Step 1: Get the other type
+    let otherType = 'finished';
+    if (this.type === 'finished') {
+      otherType = 'active';
+    }
+
+    // Step 1: Remove the project
+    this.projects = this.projects.filter((project) => {
+      if (project.title === projectTitle) {
+        this.transferEmitter.emit(`${otherType}.dropped`, project);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  /**
+   * Adding listener
+   */
+  addListeners() {
+    this.element.addEventListener('dragover', this.dragOverHandler);
+    this.element.addEventListener('dragleave', this.dragLeaveHandler);
+    this.element.addEventListener('drop', this.dropHandler);
+    this.transferEmitter.on(`${this.type}.dropped`, this.droppedEventHandler);
+    this.transferEmitter.on(`${this.type}.taken`, this.takenEventHandler);
   }
 }
 
@@ -491,10 +715,14 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
   // Step 1: Get the root
   const root = document.getElementById('app') as HTMLDivElement;
 
-  // Step 1: DOM initializers
+  // Step 2: Event emitter for transfer
+  const transferEmitter = new Emitter();
+
+  // Step 2: DOM initializers
   const activeProjects = new ProjectList(
     root,
     document.getElementById('project-list') as HTMLTemplateElement,
+    transferEmitter,
     'active',
   );
   const projectInput = new ProjectInput(
@@ -505,13 +733,19 @@ class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
   const finishedProjects = new ProjectList(
     root,
     document.getElementById('project-list') as HTMLTemplateElement,
+    transferEmitter,
     'finished',
   );
 
 
+  // Step 2: Add event listeners
+  projectInput.addListeners();
+  activeProjects.addListeners();
+  finishedProjects.addListeners();
+
+
   // Step 2: Instantiate it and add the event listeners
   projectInput.render();
-  projectInput.addListeners();
 
   activeProjects.render();
   finishedProjects.render();
