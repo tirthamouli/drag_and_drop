@@ -3,7 +3,7 @@
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
     "target": "es5", /* Specify ECMAScript target version (which version should the compiled js work on - es5 means compiled down to es5): 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
-    "module": "commonjs", /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+    "module": "es2015", /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
     "lib": [
       "es6", // Enabling es6 features
       "DOM", // Enables DOM interaction APIs. If lib option is not selected, it is enabled by default

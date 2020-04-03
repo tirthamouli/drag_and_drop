@@ -22,11 +22,34 @@
             "error",
             "windows"
         ],
-        "no-unused-vars": [
+        "import/extensions": [
             "error",
+            "ignorePackages",
             {
-                "argsIgnorePattern": "_"
+                "js": "never",
+                "jsx": "never",
+                "ts": "never",
+                "tsx": "never"
             }
-        ]
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "on",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^ignored?$"
+            }
+        ],
+    },
+    "settings": {
+        "import/resolver": {
+            "node": {
+                "extensions": [
+                    ".js",
+                    ".jsx",
+                    ".ts",
+                    ".tsx"
+                ]
+            }
+        }
     }
 }
