@@ -15,7 +15,8 @@
         "ecmaVersion": 2018
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "import"
     ],
     "rules": {
         "linebreak-style": [
@@ -23,7 +24,7 @@
             "windows"
         ],
         "import/extensions": [
-            "error",
+            "off",
             "ignorePackages",
             {
                 "js": "never",
@@ -32,24 +33,22 @@
                 "tsx": "never"
             }
         ],
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-unused-vars": [
-            "on",
+            2,
             {
-                "argsIgnorePattern": "^_",
+                "argsIgnorePattern": "_",
                 "varsIgnorePattern": "^ignored?$"
             }
         ],
-    },
-    "settings": {
-        "import/resolver": {
-            "node": {
-                "extensions": [
-                    ".js",
-                    ".jsx",
-                    ".ts",
-                    ".tsx"
-                ]
+        "no-unused-vars": [
+            2,
+            {
+                "argsIgnorePattern": "_",
+                "varsIgnorePattern": "^ignored?$"
             }
-        }
+        ],
+        "import/no-unresolved": "off"
     }
 }

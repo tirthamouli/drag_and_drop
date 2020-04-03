@@ -1,37 +1,38 @@
-import Component from "./BaseComponent.js";
-import Emitter from "../utils/Emitter.js";
-import ProjectItem from "./ProjectItem.js";
-import Project from "../types/Project.js";
-import AutoBind from "../decorators/AutoBind.js";
-import { DragTarget } from "../types/DragAndDrop.js";
+import Component from './BaseComponent.js';
+import Emitter from '../utils/Emitter.js';
+import ProjectItem from './ProjectItem.js';
+import Project from '../types/Project.js';
+import AutoBind from '../decorators/AutoBind.js';
+import { DragTarget } from '../types/DragAndDrop.js';
 
 
 /**
  * The list of the projects
  */
-export default class ProjectList extends Component<HTMLDivElement, HTMLUListElement> implements DragTarget {
+export default class ProjectList extends
+  Component<HTMLDivElement, HTMLUListElement> implements DragTarget {
     /**
      * The main ul to which we are going to append the list item
      */
     private ul: HTMLUListElement
-  
+
     /**
      * List of the projects
      */
     private list: Project[] = []
-  
+
     /**
      * The emitter used for transfer
      */
     private transferEmitter: Emitter
-  
+
     /**
      * Get the project list
      */
     get projects() {
       return this.list;
     }
-  
+
     /**
      * Set the project list and change dom accordingly
      */
@@ -40,7 +41,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
       const keepTitles: {[property: string]: number} = {};
       const keptTitles: {[property: string]: number} = {};
       let deleted = 0;
-  
+
       value.forEach((item, index) => {
         keepTitles[item.title] = index;
       });
@@ -52,7 +53,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
         }
         keptTitles[item.title] = index - deleted;
       });
-  
+
       // Step 2: Add or move items at the correct index
       value.forEach((item, index) => {
         if (keptTitles[item.title] === undefined) {
@@ -68,11 +69,11 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
           this.ul.insertBefore(this.ul.children[keptTitles[item.title]], this.ul.children[index]);
         }
       });
-  
+
       // Step 3: Update the list
       this.list = value;
     }
-  
+
     /**
      * Constructor
      */
@@ -80,16 +81,16 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
       // Step 1: Default
       super(host, template);
       this.transferEmitter = transferEmitter;
-  
+
       // Step 2: Derrived
       this.ul = this.element.querySelector('ul') as HTMLUListElement;
-  
+
       // Step 3: Adding content
       this.element.id = `${type}-projects`;
       this.ul.id = `${type}-projects-list`;
       (this.element.querySelector('h2') as HTMLHeadingElement).textContent = `${type.toUpperCase()} PROJECTS`;
     }
-  
+
     /**
      * What happens when dragged over
      * @param event
@@ -101,7 +102,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
         this.ul.classList.add('droppable');
       }
     }
-  
+
     /**
      * What happens when dropped
      * @param event
@@ -111,28 +112,27 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
       try {
         // Step 1: Get the data title
         const title = event.dataTransfer!.getData('text/plain') as string;
-  
+
         // Step 2: Check if title is already present
         if (this.projects.find((project) => project.title === title)) {
           // No need to move
           return;
         }
-  
+
         // Step 3: Get the other type
         let otherType = 'finished';
         if (this.type === 'finished') {
           otherType = 'active';
         }
-  
+
         // Step 4: Take project from other type
         this.transferEmitter.emit(`${otherType}.taken`, title);
       } catch (_error) {
         // eslint-disable-next-line no-alert
-        console.log(_error);
         alert('Something went wrong');
       }
     }
-  
+
     /**
      * What happens when drag left
      * @param event
@@ -141,7 +141,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
     dragLeaveHandler(_event: DragEvent) {
       this.ul.classList.remove('droppable');
     }
-  
+
     /**
      * When something is dropped
      * @param project
@@ -150,7 +150,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
     droppedEventHandler(project: Project) {
       this.projects = [project, ...this.projects];
     }
-  
+
     /**
      * Remove the project from project list
      * @param projectTitle
@@ -162,7 +162,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
       if (this.type === 'finished') {
         otherType = 'active';
       }
-  
+
       // Step 1: Remove the project
       this.projects = this.projects.filter((project) => {
         if (project.title === projectTitle) {
@@ -172,7 +172,7 @@ export default class ProjectList extends Component<HTMLDivElement, HTMLUListElem
         return true;
       });
     }
-  
+
     /**
      * Adding listener
      */

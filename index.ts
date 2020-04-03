@@ -1,6 +1,6 @@
-import Emitter from "./src/utils/Emitter.js";
-import ProjectList from "./src/components/ProjectList.js";
-import ProjectInput from "./src/components/ProjectInput.js";
+import Emitter from './src/utils/Emitter.js';
+import ProjectList from './src/components/ProjectList.js';
+import ProjectInput from './src/components/ProjectInput.js';
 
 
 // Step 1: Get the root

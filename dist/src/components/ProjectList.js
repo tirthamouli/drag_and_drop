@@ -24,9 +24,9 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-import Component from "./BaseComponent.js";
-import ProjectItem from "./ProjectItem.js";
-import AutoBind from "../decorators/AutoBind.js";
+import Component from './BaseComponent.js';
+import ProjectItem from './ProjectItem.js';
+import AutoBind from '../decorators/AutoBind.js';
 var ProjectList = (function (_super) {
     __extends(ProjectList, _super);
     function ProjectList(host, template, transferEmitter, type) {
@@ -93,7 +93,6 @@ var ProjectList = (function (_super) {
             this.transferEmitter.emit(otherType + ".taken", title_1);
         }
         catch (_error) {
-            console.log(_error);
             alert('Something went wrong');
         }
     };

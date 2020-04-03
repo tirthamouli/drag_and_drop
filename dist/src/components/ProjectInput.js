@@ -24,10 +24,10 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-import Component from "./BaseComponent.js";
-import AutoBind from "../decorators/AutoBind.js";
-import Project from "../types/Project.js";
-import { validate } from "../utils/Validator.js";
+import Component from './BaseComponent.js';
+import AutoBind from '../decorators/AutoBind.js';
+import Project from '../types/Project.js';
+import { validate } from '../utils/Validator.js';
 var ProjectInput = (function (_super) {
     __extends(ProjectInput, _super);
     function ProjectInput(host, template, projectList) {
