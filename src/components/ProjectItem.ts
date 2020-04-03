@@ -1,7 +1,7 @@
-import Component from './BaseComponent.js';
-import AutoBind from '../decorators/AutoBind.js';
-import { Draggable } from '../types/DragAndDrop.js';
-import Project from '../types/Project.js';
+import Component from './BaseComponent';
+import AutoBind from '../decorators/AutoBind';
+import { Draggable } from '../types/DragAndDrop';
+import Project from '../types/Project';
 
 /**
  * A list item in the project

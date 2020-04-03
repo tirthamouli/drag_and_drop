@@ -1,4 +1,4 @@
-import { addValidator } from '../utils/Validator.js';
+import { addValidator } from '../utils/Validator';
 
 /**
  * Required decorater, property cannot have falsy value

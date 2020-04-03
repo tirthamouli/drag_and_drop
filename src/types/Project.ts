@@ -1,6 +1,6 @@
 import {
   MinLength, MaxLength, Required, PositiveNumber, Min, Max,
-} from '../decorators/Validation.js';
+} from '../decorators/Validation';
 
 /**
  * Stores a project

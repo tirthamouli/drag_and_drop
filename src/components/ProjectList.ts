@@ -1,9 +1,9 @@
-import Component from './BaseComponent.js';
-import Emitter from '../utils/Emitter.js';
-import ProjectItem from './ProjectItem.js';
-import Project from '../types/Project.js';
-import AutoBind from '../decorators/AutoBind.js';
-import { DragTarget } from '../types/DragAndDrop.js';
+import Component from './BaseComponent';
+import Emitter from '../utils/Emitter';
+import ProjectItem from './ProjectItem';
+import Project from '../types/Project';
+import AutoBind from '../decorators/AutoBind';
+import { DragTarget } from '../types/DragAndDrop';
 
 
 /**

@@ -1,9 +1,9 @@
 /* eslint-disable import/extensions */
-import Component from './BaseComponent.js';
-import ProjectList from './ProjectList.js';
-import AutoBind from '../decorators/AutoBind.js';
-import Project from '../types/Project.js';
-import { validate } from '../utils/Validator.js';
+import Component from './BaseComponent';
+import ProjectList from './ProjectList';
+import AutoBind from '../decorators/AutoBind';
+import Project from '../types/Project';
+import { validate } from '../utils/Validator';
 
 /**
  * Project input class
